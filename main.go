@@ -15,6 +15,44 @@ import (
 
 const maxLen = 4096
 
+func main() {
+	usingGetUpdates()
+}
+
+func usingGetUpdates() {
+	bot, err := tgbotapi.NewBotAPI("1848375067:AAFymj73U59zl8buuYfoybrhJFkL_L4xbKI")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	bot.Debug = true
+
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+
+	updates, err := bot.GetUpdatesChan(u)
+
+	for update := range updates {
+		if update.Message == nil { // ignore any non-Message Updates
+			continue
+		}
+
+		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+		if val, err := strconv.Atoi(update.Message.Text); err == nil {
+			dataToSend:= ""
+			/*if len(update.Message.Text) < 6 {
+				dataToSend = "PLease enter a valid pincode"
+			} else {
+				dataToSend = fetchDataByPinCode(val)
+			}*/
+			dataToSend = FetchDataByDistrictId(val)
+			SendTelegramMessage(bot, update.Message.Chat.ID, dataToSend)
+		}
+	}
+}
+
 func FetchDataByPinCode(pincode int) string {
 	dateInDDMMYYYYFormat := GetDateInDDMMYYYYFormat(time.Now())
 	url := "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?" +
@@ -111,40 +149,6 @@ func ParseJsonData(jsonData Response) string {
 		messageToBeReturned = "No slots available, PLease try again tomorrow"
 	}
 	return messageToBeReturned
-}
-
-func main() {
-	bot, err := tgbotapi.NewBotAPI("1848375067:AAFymj73U59zl8buuYfoybrhJFkL_L4xbKI")
-	if err != nil {
-		log.Panic(err)
-	}
-
-	bot.Debug = true
-
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates, err := bot.GetUpdatesChan(u)
-
-	for update := range updates {
-		if update.Message == nil { // ignore any non-Message Updates
-			continue
-		}
-
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-		if val, err := strconv.Atoi(update.Message.Text); err == nil {
-			dataToSend:= ""
-			/*if len(update.Message.Text) < 6 {
-				dataToSend = "PLease enter a valid pincode"
-			} else {
-				dataToSend = fetchDataByPinCode(val)
-			}*/
-			dataToSend = FetchDataByDistrictId(val)
-			SendTelegramMessage(bot, update.Message.Chat.ID, dataToSend)
-		}
-	}
 }
 
 func SendTelegramMessage(bot *tgbotapi.BotAPI, chatId int64, dataToSend string) {
