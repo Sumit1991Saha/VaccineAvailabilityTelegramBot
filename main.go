@@ -5,8 +5,10 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,8 +21,17 @@ func main() {
 	usingGetUpdates()
 }
 
+func readTokenFromFile() string  {
+	byteSlice, err := ioutil.ReadFile("BotToken.txt")
+	if err != nil {
+		fmt.Println("Error :- ", err)
+		os.Exit(1)
+	}
+	return string(byteSlice)
+}
 func usingGetUpdates() {
-	bot, err := tgbotapi.NewBotAPI("1848375067:AAFymj73U59zl8buuYfoybrhJFkL_L4xbKI")
+	botToken := readTokenFromFile()
+	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
 		log.Panic(err)
 	}
