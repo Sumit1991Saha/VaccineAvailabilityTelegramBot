@@ -16,7 +16,7 @@ func usingGetUpdates() {
 	botToken := readTokenFromFile()
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
-		log.Panic(err)
+		fmt.Println("Error (usingGetUpdates) :- ", err)
 	}
 
 	bot.Debug = true
@@ -35,14 +35,18 @@ func usingGetUpdates() {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 		if val, err := strconv.Atoi(update.Message.Text); err == nil {
-			dataToSend:= ""
-			/*if len(update.Message.Text) < 6 {
+			dataToSend := ""
+			/*if len(update.Message.Text) != 6 {
 				dataToSend = "PLease enter a valid pincode"
 			} else {
-				dataToSend = fetchDataByPinCode(val)
+				dataToSend = FetchDataByPinCode(val)
 			}*/
 			dataToSend = FetchDataByDistrictId(val)
-			SendTelegramMessage(bot, update.Message.Chat.ID, dataToSend)
+			if dataToSend == "" {
+				fmt.Println("Error empty string, so not sending data")
+			} else {
+				SendTelegramMessage(bot, update.Message.Chat.ID, dataToSend)
+			}
 		}
 	}
 }
@@ -67,7 +71,7 @@ func FetchDataByDistrictId(districtId int) string {
 func FetchData(url string) string {
 	vacancies, err := ApiCall(url, "GET")
 	if err != nil {
-		fmt.Println("Error :- ", err)
+		fmt.Println("Error (FetchData) :- ", err)
 		return ""
 	}
 	return vacancies
@@ -84,6 +88,3 @@ func SendTelegramMessage(bot *tgbotapi.BotAPI, chatId int64, dataToSend string) 
 		}
 	}
 }
-
-
-

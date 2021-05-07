@@ -38,17 +38,22 @@ func ApiCall(url, method string) (string, error) {
 	}
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		_ = fmt.Errorf("Got error %s", err.Error())
+		fmt.Println("Error (ApiCall - NewRequest) :- ", err)
 		return "", err
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
 	response, err := client.Do(req)
 	if err != nil {
-		_ = fmt.Errorf("Got error %s", err.Error())
+		fmt.Println("Error (ApiCall - Do) :- ", err)
 		return "", err
 	}
 
-	data := ReadData(response)
+	data := ""
+	if response.StatusCode == 200 {
+		data = ReadDataForCenters(response)
+	} else {
+		fmt.Println("Error calling api :- " , response.Status)
+	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -58,12 +63,20 @@ func ApiCall(url, method string) (string, error) {
 	return data, nil
 }
 
-func ReadData(response *http.Response) string {
+func ReadDataForCenters(response *http.Response) string {
 	var jsonData Response
-	err := json.NewDecoder(response.Body).Decode(&jsonData)
+
+	bytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
+		fmt.Println("Error ReadData (ReadAll) :- ", err)
 		return ""
 	}
+	err = json.Unmarshal(bytes, &jsonData)
+	if err != nil {
+		fmt.Println("Error ReadData (Unmarshal) :- ", err)
+		return ""
+	}
+
 	return ParseJsonData(jsonData)
 }
 
