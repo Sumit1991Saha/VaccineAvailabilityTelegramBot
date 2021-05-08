@@ -64,7 +64,7 @@ func ApiCall(url, method string) (string, error) {
 }
 
 func ReadDataForCenters(response *http.Response) string {
-	var jsonData Response
+	var jsonData ResponseCenters
 
 	bytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -80,7 +80,7 @@ func ReadDataForCenters(response *http.Response) string {
 	return ParseJsonData(jsonData)
 }
 
-func ParseJsonData(jsonData Response) string {
+func ParseJsonData(jsonData ResponseCenters) string {
 	messageToBeReturned := ""
 	for i := 0; i < len(jsonData.Centers); i++ {
 		center := jsonData.Centers[i]
