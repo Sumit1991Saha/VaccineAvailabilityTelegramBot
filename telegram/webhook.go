@@ -41,10 +41,10 @@ func SetWebhook() {
 			// Send a post request with your token
 			res, err := http.Post(url, "application/json", bytes.NewBuffer(reqBytes))
 			if err != nil {
-				fmt.Println("Error Post:- ", err)
+				fmt.Println("Error setting Webhook:- ", err)
 			}
 			if res.StatusCode != http.StatusOK {
-				fmt.Println("Error non 200 status code:- ", err)
+				fmt.Println("Unable to set Webhook")
 			}
 			if err == nil && res.StatusCode == http.StatusOK {
 				fmt.Println("Webhook is set")
@@ -57,11 +57,13 @@ func SetWebhook() {
 // Handler This handler is called everytime telegram sends us a webhook event
 func Handler(res http.ResponseWriter, req *http.Request) {
 	// First, decode the JSON response body
-	body := &models.WebhookReqBody{}
+	body := &models.TelegramRequest{}
 	if err := json.NewDecoder(req.Body).Decode(body); err != nil {
 		fmt.Println("could not decode request body", err)
 		return
 	}
+
+	fmt.Println("Received text :- " + body.Message.Text + " , from :- " + body.Message.From.FirstName)
 
 	if val, err := strconv.Atoi(body.Message.Text); err == nil {
 		dataToSend := ""
@@ -74,8 +76,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 		if dataToSend == "" {
 			fmt.Println("Error empty string, so not sending data")
 		} else {
-			fmt.Println(dataToSend)
-			sendMessage.SendTelegramUsingWebhook(body.Message.Chat.ID, dataToSend)
+			//fmt.Println(dataToSend)
+			sendMessage.SendTelegramUsingWebhook(body.Message.Chat.Id, dataToSend)
 		}
 	}
 }

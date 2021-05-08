@@ -21,11 +21,11 @@ func SendTelegramUsingBotApi(bot *tgbotapi.BotAPI, chatId int64, dataToSend stri
 	}
 }
 
-func SendTelegramUsingWebhook(chatID int64, dataToSend string) {
+func SendTelegramUsingWebhook(chatID int, dataToSend string) {
 	data := utils.SplitDataInChunks(dataToSend)
 	for i := 0; i < len(data); i++ {
 		// Create the request body struct
-		reqBody := &models.SendMessageReqBody{
+		reqBody := &models.TelegramResponse{
 			ChatID: chatID,
 			Text:   data[i],
 		}
