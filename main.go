@@ -1,14 +1,16 @@
 package main
 
 import (
-	"bytes"
+	"VaccineAvailabilityTelegramBot/cowin"
+	"VaccineAvailabilityTelegramBot/models"
+	"VaccineAvailabilityTelegramBot/telegram"
+	"VaccineAvailabilityTelegramBot/utils"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func main() {
@@ -17,13 +19,19 @@ func main() {
 }
 
 func usingWebhook() {
+	SetWebhook()
 	http.ListenAndServe(":3000", http.HandlerFunc(Handler))
+}
+
+func SetWebhook() {
+	//ngrokTunnelUrl := "http://localhost:4040/api/tunnels"
+	//http.Get(ngrokTunnelUrl)
 }
 
 // Handler This handler is called everytime telegram sends us a webhook event
 func Handler(res http.ResponseWriter, req *http.Request) {
 	// First, decode the JSON response body
-	body := &WebhookReqBody{}
+	body := &models.WebhookReqBody{}
 	if err := json.NewDecoder(req.Body).Decode(body); err != nil {
 		fmt.Println("could not decode request body", err)
 		return
@@ -36,12 +44,12 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 		} else {
 			dataToSend = FetchDataByPinCode(val)
 		}*/
-		dataToSend = FetchDataByDistrictId(val)
+		dataToSend = cowin.FetchDataByDistrictId(val)
 		if dataToSend == "" {
 			fmt.Println("Error empty string, so not sending data")
 		} else {
 			fmt.Println(dataToSend)
-			SendTelegramMessageUsingWebhook(body.Message.Chat.ID, dataToSend)
+			telegram.SendTelegramMessageUsingWebhook(body.Message.Chat.ID, dataToSend)
 		}
 	}
 
@@ -50,7 +58,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 }
 
 func usingGetUpdates() {
-	botToken := readTokenFromFile()
+	botToken := utils.ReadTokenFromFile()
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
 		fmt.Println("Error (usingGetUpdates) :- ", err)
@@ -78,78 +86,16 @@ func usingGetUpdates() {
 			} else {
 				dataToSend = FetchDataByPinCode(val)
 			}*/
-			dataToSend = FetchDataByDistrictId(val)
+			dataToSend = cowin.FetchDataByDistrictId(val)
 			if dataToSend == "" {
 				fmt.Println("Error empty string, so not sending data")
 			} else {
-				SendTelegramMessageUsingBotApi(bot, update.Message.Chat.ID, dataToSend)
+				telegram.SendTelegramMessageUsingBotApi(bot, update.Message.Chat.ID, dataToSend)
 			}
 		}
 	}
 }
 
-func FetchDataByPinCode(pincode int) string {
-	dateInDDMMYYYYFormat := GetDateInDDMMYYYYFormat(time.Now())
-	url := "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?" +
-		"pincode=" + strconv.Itoa(pincode) +
-		"&date=" + dateInDDMMYYYYFormat
-	return FetchData(url)
-}
 
-func FetchDataByDistrictId(districtId int) string {
-	dateInDDMMYYYYFormat := GetDateInDDMMYYYYFormat(time.Now())
-	//vadodara_corporation_dist_id := 777
-	url := "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?" +
-		"district_id=" + strconv.Itoa(districtId) +
-		"&date=" + dateInDDMMYYYYFormat
-	return FetchData(url)
-}
 
-func FetchData(url string) string {
-	vacancies, err := ApiCall(url, "GET")
-	if err != nil {
-		fmt.Println("Error (FetchData) :- ", err)
-		return ""
-	}
-	return vacancies
-	//call("http://pokeapi.co/api/v2/pokedex/kanto/", "GET")
-}
 
-func SendTelegramMessageUsingBotApi(bot *tgbotapi.BotAPI, chatId int64, dataToSend string) {
-	data := SplitDataInChunks(dataToSend)
-	for i := 0; i < len(data); i++ {
-		msg := tgbotapi.NewMessage(chatId, data[i])
-		_, err := bot.Send(msg)
-		if err != nil {
-			fmt.Println("Error while sending message :- ", err)
-		}
-	}
-}
-
-func SendTelegramMessageUsingWebhook(chatID int64, dataToSend string) {
-	data := SplitDataInChunks(dataToSend)
-	for i := 0; i < len(data); i++ {
-		// Create the request body struct
-		reqBody := &SendMessageReqBody{
-			ChatID: chatID,
-			Text:   data[i],
-		}
-		// Create the JSON body from the struct
-		reqBytes, err := json.Marshal(reqBody)
-		if err != nil {
-			fmt.Println("Error Marshal:- ", err)
-		} else {
-			botToken := readTokenFromFile()
-			url := "https://api.telegram.org/bot" + botToken + "/sendMessage"
-
-			// Send a post request with your token
-			res, err := http.Post(url, "application/json", bytes.NewBuffer(reqBytes))
-			if err != nil {
-				fmt.Println("Error Post:- ", err)
-			}
-			if res.StatusCode != http.StatusOK {
-				fmt.Println("Error non 200 status code:- ", err)
-			}
-		}
-	}
-}
