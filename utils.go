@@ -49,7 +49,7 @@ func ApiCall(url, method string) (string, error) {
 	}
 
 	data := ""
-	if response.StatusCode == 200 {
+	if response.StatusCode == http.StatusOK {
 		data = ReadDataForCenters(response)
 	} else {
 		fmt.Println("Error calling api :- " , response.Status)

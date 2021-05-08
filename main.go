@@ -1,15 +1,52 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"net/http"
 	"strconv"
 	"time"
 )
 
 func main() {
-	usingGetUpdates()
+	//usingGetUpdates()
+	usingWebhook()
+}
+
+func usingWebhook() {
+	http.ListenAndServe(":3000", http.HandlerFunc(Handler))
+}
+
+// Handler This handler is called everytime telegram sends us a webhook event
+func Handler(res http.ResponseWriter, req *http.Request) {
+	// First, decode the JSON response body
+	body := &WebhookReqBody{}
+	if err := json.NewDecoder(req.Body).Decode(body); err != nil {
+		fmt.Println("could not decode request body", err)
+		return
+	}
+
+	if val, err := strconv.Atoi(body.Message.Text); err == nil {
+		dataToSend := ""
+		/*if len(update.Message.Text) != 6 {
+			dataToSend = "PLease enter a valid pincode"
+		} else {
+			dataToSend = FetchDataByPinCode(val)
+		}*/
+		dataToSend = FetchDataByDistrictId(val)
+		if dataToSend == "" {
+			fmt.Println("Error empty string, so not sending data")
+		} else {
+			fmt.Println(dataToSend)
+			SendTelegramMessageUsingWebhook(body.Message.Chat.ID, dataToSend)
+		}
+	}
+
+	// log a confirmation message if the message is sent successfully
+	fmt.Println("reply sent")
 }
 
 func usingGetUpdates() {
@@ -45,7 +82,7 @@ func usingGetUpdates() {
 			if dataToSend == "" {
 				fmt.Println("Error empty string, so not sending data")
 			} else {
-				SendTelegramMessage(bot, update.Message.Chat.ID, dataToSend)
+				SendTelegramMessageUsingBotApi(bot, update.Message.Chat.ID, dataToSend)
 			}
 		}
 	}
@@ -78,13 +115,41 @@ func FetchData(url string) string {
 	//call("http://pokeapi.co/api/v2/pokedex/kanto/", "GET")
 }
 
-func SendTelegramMessage(bot *tgbotapi.BotAPI, chatId int64, dataToSend string) {
+func SendTelegramMessageUsingBotApi(bot *tgbotapi.BotAPI, chatId int64, dataToSend string) {
 	data := SplitDataInChunks(dataToSend)
 	for i := 0; i < len(data); i++ {
 		msg := tgbotapi.NewMessage(chatId, data[i])
 		_, err := bot.Send(msg)
 		if err != nil {
 			fmt.Println("Error while sending message :- ", err)
+		}
+	}
+}
+
+func SendTelegramMessageUsingWebhook(chatID int64, dataToSend string) {
+	data := SplitDataInChunks(dataToSend)
+	for i := 0; i < len(data); i++ {
+		// Create the request body struct
+		reqBody := &SendMessageReqBody{
+			ChatID: chatID,
+			Text:   data[i],
+		}
+		// Create the JSON body from the struct
+		reqBytes, err := json.Marshal(reqBody)
+		if err != nil {
+			fmt.Println("Error Marshal:- ", err)
+		} else {
+			botToken := readTokenFromFile()
+			url := "https://api.telegram.org/bot" + botToken + "/sendMessage"
+
+			// Send a post request with your token
+			res, err := http.Post(url, "application/json", bytes.NewBuffer(reqBytes))
+			if err != nil {
+				fmt.Println("Error Post:- ", err)
+			}
+			if res.StatusCode != http.StatusOK {
+				fmt.Println("Error non 200 status code:- ", err)
+			}
 		}
 	}
 }
