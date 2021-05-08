@@ -1,4 +1,4 @@
-package telegram
+package sendMessage
 
 import (
 	"VaccineAvailabilityTelegramBot/models"
@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func SendTelegramMessageUsingBotApi(bot *tgbotapi.BotAPI, chatId int64, dataToSend string) {
+func SendTelegramUsingBotApi(bot *tgbotapi.BotAPI, chatId int64, dataToSend string) {
 	data := utils.SplitDataInChunks(dataToSend)
 	for i := 0; i < len(data); i++ {
 		msg := tgbotapi.NewMessage(chatId, data[i])
@@ -21,7 +21,7 @@ func SendTelegramMessageUsingBotApi(bot *tgbotapi.BotAPI, chatId int64, dataToSe
 	}
 }
 
-func SendTelegramMessageUsingWebhook(chatID int64, dataToSend string) {
+func SendTelegramUsingWebhook(chatID int64, dataToSend string) {
 	data := utils.SplitDataInChunks(dataToSend)
 	for i := 0; i < len(data); i++ {
 		// Create the request body struct

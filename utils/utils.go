@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -41,7 +40,8 @@ func ApiCall(url, method string) (*http.Response, error) {
 		fmt.Println("Error (ApiCall - NewRequest) :- ", err)
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
+	req.Header.Set("User-Agent",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
 	response, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error (ApiCall - Do) :- ", err)
@@ -49,57 +49,6 @@ func ApiCall(url, method string) (*http.Response, error) {
 	}
 
 	return response, err
-}
-
-func ReadDataForCenters(response *http.Response) string {
-
-	if response.StatusCode != http.StatusOK {
-		fmt.Println("Error calling api :- " , response.Status)
-		return ""
-	}
-
-	var jsonData models.ResponseCenters
-
-	bytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println("Error ReadData (ReadAll) :- ", err)
-		return ""
-	}
-	err = json.Unmarshal(bytes, &jsonData)
-	if err != nil {
-		fmt.Println("Error ReadData (Unmarshal) :- ", err)
-		return ""
-	}
-
-	return ParseJsonData(jsonData)
-}
-
-func ParseJsonData(jsonData models.ResponseCenters) string {
-	messageToBeReturned := ""
-	for i := 0; i < len(jsonData.Centers); i++ {
-		center := jsonData.Centers[i]
-		sessions := center.Sessions
-		for j := 0; j < len(sessions); j++ {
-			session := sessions[j]
-			noOfDosesAvailable := session.AvailableCapacity
-			if noOfDosesAvailable > 0 {
-				msg := "Vaccine available on :- " + session.Date + "\n" +
-					"AvailableCapacity :- " + strconv.Itoa(noOfDosesAvailable) + "\n" +
-					"At center :- " + center.Name + "\n" +
-					"Address :- " + center.Address + "\n"
-				if session.MinAgeLimit >= 45 {
-					msg = "For 45+ years, " + "\n" + msg
-				} else {
-					msg = "For 18+ years, " + "\n" + msg
-				}
-				messageToBeReturned = messageToBeReturned + msg + "\n"
-			}
-		}
-	}
-	if messageToBeReturned == "" {
-		messageToBeReturned = "No slots available, PLease try again tomorrow"
-	}
-	return messageToBeReturned
 }
 
 func SplitDataInChunks(dataToSend string) []string {
@@ -113,4 +62,26 @@ func SplitDataInChunks(dataToSend string) []string {
 	}
 	splits = append(splits, dataToSend[l:])
 	return splits
+}
+
+func GetPublicUrlNgrok(response *http.Response) string {
+	if response.StatusCode != http.StatusOK {
+		fmt.Println("Error calling api :- " , response.Status)
+		return ""
+	}
+
+	var jsonData models.ResponseTunnels
+
+	bytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println("Error ReadData (ReadAll) :- ", err)
+		return ""
+	}
+	err = json.Unmarshal(bytes, &jsonData)
+	if err != nil {
+		fmt.Println("Error ReadData (Unmarshal) :- ", err)
+		return ""
+	}
+
+	return jsonData.Tunnel[0].PublicUrl
 }
