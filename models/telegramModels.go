@@ -7,13 +7,13 @@ type TelegramRequest struct {
 	Message  struct {
 		MessageId int `json:"message_id"`
 		From      struct {
-			Id        int    `json:"id"`
+			Id        int64    `json:"id"`
 			IsBot     bool   `json:"is_bot"`
 			FirstName string `json:"first_name"`
 			Username  string `json:"username"`
 		} `json:"from"`
 		Chat struct {
-			Id        int    `json:"id"`
+			Id        int64    `json:"id"`
 			FirstName string `json:"first_name"`
 			Username  string `json:"username"`
 			Type      string `json:"type"`
@@ -32,7 +32,7 @@ type TelegramRequest struct {
 // of the send message request
 // https://core.telegram.org/bots/api#sendmessage
 type TelegramResponse struct {
-	ChatID int  `json:"chat_id"`
+	ChatID int64  `json:"chat_id"`
 	Text   string `json:"text"`
 }
 
