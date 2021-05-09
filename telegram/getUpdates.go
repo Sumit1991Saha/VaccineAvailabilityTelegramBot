@@ -60,5 +60,7 @@ func deleteWebhookIfAny() {
 	}
 	if response.StatusCode == http.StatusOK {
 		fmt.Println("Webhook is deleted")
+	} else {
+		fmt.Println("unable to delete Webhook")
 	}
 }
