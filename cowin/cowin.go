@@ -61,7 +61,7 @@ func ParseResponseCenters(vaccineCentersData models.ResponseCenters) string {
 		}
 	}
 	if messageToBeReturned == "" {
-		messageToBeReturned = "No slots available, PLease try again tomorrow"
+		messageToBeReturned = "No slots available, Please try again tomorrow"
 	}
 	return messageToBeReturned
 }

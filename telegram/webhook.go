@@ -33,7 +33,7 @@ func SetWebhook() {
 			fmt.Println("Error Unable to set Webhook")
 		} else {
 			reqBody := &models.Webhook{
-				Url : ngrokServerUrl,
+				Url: ngrokServerUrl,
 			}
 			// Create the JSON body from the struct
 			reqBytes, err := json.Marshal(reqBody)
@@ -70,18 +70,26 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 
 	if val, err := strconv.Atoi(body.Message.Text); err == nil {
 		dataToSend := ""
-		/*if len(update.Message.Text) != 6 {
-			dataToSend = "PLease enter a valid pincode"
+		if len(body.Message.Text) == 6 {
+			dataToSend = cowin.FetchDataByPinCode(val)
+		} else if len(body.Message.Text) <= 3 {
+			dataToSend = cowin.FetchDataByDistrictId(val)
 		} else {
-			dataToSend = FetchDataByPinCode(val)
-		}*/
-		dataToSend = cowin.FetchDataByDistrictId(val)
+			sendMessage.SendTelegramUsingWebhook(body.Message.Chat.Id,
+				"Please enter valid pincode or district id")
+			return
+		}
 		if dataToSend == "" {
 			fmt.Println("Error empty string, so not sending data")
+			sendMessage.SendTelegramUsingWebhook(body.Message.Chat.Id,
+				"Unable to fetch data, please try again after sometime")
 		} else {
 			//fmt.Println(dataToSend)
 			sendMessage.SendTelegramUsingWebhook(body.Message.Chat.Id, dataToSend)
 			fmt.Println("Data sent")
 		}
+	} else {
+		sendMessage.SendTelegramUsingWebhook(body.Message.Chat.Id,
+			"Please enter either valid pincode or district id")
 	}
 }

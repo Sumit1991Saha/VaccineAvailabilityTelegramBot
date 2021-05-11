@@ -37,18 +37,27 @@ func StartServiceUsingGetUpdates() {
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 		if val, err := strconv.Atoi(update.Message.Text); err == nil {
 			dataToSend := ""
-			/*if len(update.Message.Text) != 6 {
-				dataToSend = "PLease enter a valid pincode"
+			if len(update.Message.Text) == 6 {
+				dataToSend = cowin.FetchDataByPinCode(val)
+			} else if len(update.Message.Text) <=3 {
+				dataToSend = cowin.FetchDataByDistrictId(val)
 			} else {
-				dataToSend = FetchDataByPinCode(val)
-			}*/
-			dataToSend = cowin.FetchDataByDistrictId(val)
+				sendMessage.SendTelegramUsingBotApi(bot, update.Message.Chat.ID,
+					"Please enter valid pincode or district id")
+				return
+			}
+
 			if dataToSend == "" {
 				fmt.Println("Error empty string, so not sending data")
+				sendMessage.SendTelegramUsingBotApi(bot, update.Message.Chat.ID,
+					"Unable to fetch data, please try again after sometime")
 			} else {
 				sendMessage.SendTelegramUsingBotApi(bot, update.Message.Chat.ID, dataToSend)
 				fmt.Println("Data sent")
 			}
+		} else {
+			sendMessage.SendTelegramUsingBotApi(bot, update.Message.Chat.ID,
+				"Please enter either valid pincode or district id")
 		}
 	}
 }
