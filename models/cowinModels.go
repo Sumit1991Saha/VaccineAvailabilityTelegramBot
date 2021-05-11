@@ -39,7 +39,7 @@ type State struct {
 }
 
 type ResponseDistricts struct {
-	District []District `json:"districts"`
+	Districts []District `json:"districts"`
 }
 
 type District struct {
