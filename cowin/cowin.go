@@ -101,7 +101,7 @@ func FetchStateDataAlongWithDistrictData() {
 }
 
 func WriteStateData(states []models.State) {
-	f, e := os.Create("./States.csv")
+	f, e := os.Create("./csvfiles/All-States.csv")
 	if e != nil {
 		fmt.Println(e)
 	} else {
@@ -124,7 +124,7 @@ func WriteStateData(states []models.State) {
 }
 
 func WriteDistrictData(stateName string, districts []models.District) {
-	f, e := os.Create(fmt.Sprintf("./%s.csv", stateName))
+	f, e := os.Create(fmt.Sprintf("./csvfiles/%s.csv", stateName))
 	if e != nil {
 		fmt.Println(e)
 	} else {
