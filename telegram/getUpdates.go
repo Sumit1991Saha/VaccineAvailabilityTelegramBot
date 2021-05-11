@@ -47,6 +47,7 @@ func StartServiceUsingGetUpdates() {
 				fmt.Println("Error empty string, so not sending data")
 			} else {
 				sendMessage.SendTelegramUsingBotApi(bot, update.Message.Chat.ID, dataToSend)
+				fmt.Println("Data sent")
 			}
 		}
 	}

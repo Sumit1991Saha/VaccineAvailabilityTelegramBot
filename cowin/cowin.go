@@ -6,60 +6,40 @@ import (
 	"VaccineAvailabilityTelegramBot/utils"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 )
 
 func FetchDataByPinCode(pincode int) string {
 	url := api.GetUrlByPincode(pincode)
-	return FetchData(url)
+	return FetchDataForVaccineCenters(url)
 }
 
 func FetchDataByDistrictId(districtId int) string {
 	//vadodara_corporation_dist_id := 777
 	url := api.GetUrlByDistrictId(districtId)
-	return FetchData(url)
+	return FetchDataForVaccineCenters(url)
 }
 
-func FetchData(url string) string {
-	response, err := utils.ApiCall(url, "GET")
-	if err != nil || response == nil {
-		fmt.Println("Error (FetchData) :- ", err)
+func FetchDataForVaccineCenters(url string) string {
+	vaccineCentersDataInBytes := utils.FetchDataInBytesFromGetApiCall(url)
+	if vaccineCentersDataInBytes == nil {
+		fmt.Println("Unable to fetch data from api FetchDataForVaccineCenters")
 		return ""
+	} else {
+		var vaccineCentersData models.ResponseCenters
+		err := json.Unmarshal(vaccineCentersDataInBytes, &vaccineCentersData)
+		if err != nil {
+			fmt.Println("Error ReadData (Unmarshal) :- ", err)
+			return ""
+		}
+		return ParseResponseCenters(vaccineCentersData)
 	}
-	vacancies := ReadDataForCenters(response)
-	return vacancies
-	//call("http://pokeapi.co/api/v2/pokedex/kanto/", "GET")
 }
 
-func ReadDataForCenters(response *http.Response) string {
-
-	if response.StatusCode != http.StatusOK {
-		fmt.Println("Error calling api :- " , response.Status)
-		return ""
-	}
-
-	var jsonData models.ResponseCenters
-
-	bytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println("Error ReadData (ReadAll) :- ", err)
-		return ""
-	}
-	err = json.Unmarshal(bytes, &jsonData)
-	if err != nil {
-		fmt.Println("Error ReadData (Unmarshal) :- ", err)
-		return ""
-	}
-
-	return ParseResponseCenters(jsonData)
-}
-
-func ParseResponseCenters(jsonData models.ResponseCenters) string {
+func ParseResponseCenters(vaccineCentersData models.ResponseCenters) string {
 	messageToBeReturned := ""
-	for i := 0; i < len(jsonData.Centers); i++ {
-		center := jsonData.Centers[i]
+	for i := 0; i < len(vaccineCentersData.Centers); i++ {
+		center := vaccineCentersData.Centers[i]
 		sessions := center.Sessions
 		for j := 0; j < len(sessions); j++ {
 			session := sessions[j]

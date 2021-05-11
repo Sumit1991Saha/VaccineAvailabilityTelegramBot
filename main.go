@@ -1,9 +1,13 @@
 package main
 
-import "VaccineAvailabilityTelegramBot/telegram"
+import (
+	"VaccineAvailabilityTelegramBot/telegram"
+)
 
 func main() {
 	//telegram.StartServiceUsingGetUpdates()
 	telegram.StartServiceUsingWebhook()
+
+	//cowin.FetchStateDataAlongWithDistrictData()
 }
 

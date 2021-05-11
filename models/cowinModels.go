@@ -34,7 +34,7 @@ type ResponseStates struct {
 }
 
 type State struct {
-	StateId   string `json:"state_id"`
+	StateId   int    `json:"state_id"`
 	StateName string `json:"state_name"`
 }
 
@@ -43,6 +43,6 @@ type ResponseDistricts struct {
 }
 
 type District struct {
-	DistrictId   string `json:"district_id"`
+	DistrictId   int    `json:"district_id"`
 	DistrictName string `json:"district_name"`
 }

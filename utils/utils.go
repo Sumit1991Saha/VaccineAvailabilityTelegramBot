@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"VaccineAvailabilityTelegramBot/models"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -51,6 +49,26 @@ func ApiCall(url, method string) (*http.Response, error) {
 	return response, err
 }
 
+func FetchDataInBytesFromGetApiCall(url string) []byte {
+	response, err := ApiCall(url, "GET")
+	if err != nil || response == nil {
+		fmt.Println("Error (FetchDataInBytesFromGetApiCall) :- ", err)
+		return nil
+	}
+
+	if response.StatusCode != http.StatusOK {
+		fmt.Println("Error calling GET api :- " , response.Status)
+		return nil
+	}
+
+	responseDataInBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println("Error ReadData (ReadAll) :- ", err)
+		return nil
+	}
+	return responseDataInBytes
+}
+
 func SplitDataInChunks(dataToSend string) []string {
 	splits := []string{}
 	var l, r int
@@ -62,26 +80,4 @@ func SplitDataInChunks(dataToSend string) []string {
 	}
 	splits = append(splits, dataToSend[l:])
 	return splits
-}
-
-func GetPublicUrlNgrok(response *http.Response) string {
-	if response.StatusCode != http.StatusOK {
-		fmt.Println("Error calling api :- " , response.Status)
-		return ""
-	}
-
-	var jsonData models.ResponseTunnels
-
-	bytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println("Error ReadData (ReadAll) :- ", err)
-		return ""
-	}
-	err = json.Unmarshal(bytes, &jsonData)
-	if err != nil {
-		fmt.Println("Error ReadData (Unmarshal) :- ", err)
-		return ""
-	}
-
-	return jsonData.Tunnel[0].PublicUrl
 }

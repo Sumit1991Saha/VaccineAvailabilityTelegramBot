@@ -20,37 +20,40 @@ func StartServiceUsingWebhook() {
 
 func SetWebhook() {
 	ngrokTunnelUrl := api.AllNgrokTunnels
-	response, err := utils.ApiCall(ngrokTunnelUrl, "GET")
-	if err != nil || response == nil {
-		fmt.Println("Error (FetchData) :- ", err)
-		return
-	}
-	ngrokServerUrl := utils.GetPublicUrlNgrok(response)
-	if ngrokServerUrl == "" {
-		fmt.Println("Error Unable to set Webhook")
-	} else {
-		reqBody := &models.Webhook{
-			Url : ngrokServerUrl,
-		}
-		// Create the JSON body from the struct
-		reqBytes, err := json.Marshal(reqBody)
-		if err != nil {
-			fmt.Println("Error Marshal:- ", err)
-		} else {
-			url := api.GetUrlToSetWebhook()
-			// Send a post request with your token
-			res, err := http.Post(url, "application/json", bytes.NewBuffer(reqBytes))
-			if err != nil {
-				fmt.Println("Error setting Webhook:- ", err)
-			}
-			if res.StatusCode != http.StatusOK {
-				fmt.Println("Unable to set Webhook")
-			}
-			if err == nil && res.StatusCode == http.StatusOK {
-				fmt.Println("Webhook is set")
-			}
-		}
+	ngrokTunnelDataInBytes := utils.FetchDataInBytesFromGetApiCall(ngrokTunnelUrl)
 
+	var ngrokTunnelData models.ResponseTunnels
+
+	err := json.Unmarshal(ngrokTunnelDataInBytes, &ngrokTunnelData)
+	if err != nil {
+		fmt.Println("Error ReadData (Unmarshal) :- ", err)
+	} else {
+		ngrokServerUrl := ngrokTunnelData.Tunnel[0].PublicUrl
+		if ngrokServerUrl == "" {
+			fmt.Println("Error Unable to set Webhook")
+		} else {
+			reqBody := &models.Webhook{
+				Url : ngrokServerUrl,
+			}
+			// Create the JSON body from the struct
+			reqBytes, err := json.Marshal(reqBody)
+			if err != nil {
+				fmt.Println("Error Marshal:- ", err)
+			} else {
+				url := api.GetUrlToSetWebhook()
+				// Send a post request with your token
+				res, err := http.Post(url, "application/json", bytes.NewBuffer(reqBytes))
+				if err != nil {
+					fmt.Println("Error setting Webhook:- ", err)
+				}
+				if res.StatusCode != http.StatusOK {
+					fmt.Println("Unable to set Webhook")
+				}
+				if err == nil && res.StatusCode == http.StatusOK {
+					fmt.Println("Webhook is set")
+				}
+			}
+		}
 	}
 }
 
@@ -78,6 +81,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 		} else {
 			//fmt.Println(dataToSend)
 			sendMessage.SendTelegramUsingWebhook(body.Message.Chat.Id, dataToSend)
+			fmt.Println("Data sent")
 		}
 	}
 }
